@@ -6,7 +6,7 @@
 #include <linux/unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define __NR_my_syscall 360
+#define __NR_get_proc_custom 360
 
 struct CustomProcInfo {
 	int pid;
@@ -22,7 +22,7 @@ int main() {
 	unsigned long long int hours, minutes, seconds; //TODO: make these smaller, and fix assignment respective assigment logic?
 
 	//Get information about the current state of processes.
-	if (syscall(__NR_my_syscall, &number_of_processes, NULL)) {
+	if (syscall(__NR_get_proc_custom, &number_of_processes, NULL)) {
 		printf("The syscall returned an error.\n");
 		return -1;
 	} else if(number_of_processes == 0) {
@@ -35,7 +35,7 @@ int main() {
 	//Allocate memory for the information. Fill array.
 	info = malloc(number_of_processes * sizeof(struct CustomProcInfo));
 	printf("total size=%d \n", number_of_processes * sizeof(struct CustomProcInfo));
-	if (syscall(__NR_my_syscall, &number_of_processes, info)) {
+	if (syscall(__NR_get_proc_custom, &number_of_processes, info)) {
 		printf("The syscall returned an error.\n");
 		return -1;
 	}

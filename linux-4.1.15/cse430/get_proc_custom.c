@@ -22,7 +22,7 @@ struct CustomProcInfo {
 	char command[16];
 };
 
-asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomProcInfo __user *proc_array) {
+asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomProcInfo __user *proc_array ) {
 	//declare variables up here to complie with c90
 	int last_pid = 0;
 	int i = 0;
