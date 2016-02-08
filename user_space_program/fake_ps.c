@@ -10,8 +10,8 @@
 
 struct CustomProcInfo {
 	int pid;
-	//char tty[64];
-	//long long time;
+	char tty[64];
+	unsigned long long int time;
 	char command[16];
 };
 
@@ -19,6 +19,7 @@ int main() {
 	struct CustomProcInfo *info;
 	int number_of_processes = 0;
 	int i;
+	unsigned long long int hours, minutes, seconds; //TODO: make these smaller, and fix assignment respective assigment logic?
 
 	//Get information about the current state of processes.
 	if (syscall(__NR_my_syscall, &number_of_processes, NULL)) {
@@ -39,14 +40,22 @@ int main() {
 		return -1;
 	}
 
-	//Get information from information.
-	
 	//Iterate through array, and print out values.
 	printf("PID TTY          TIME CMD\n");
 	for(i = 0; i < number_of_processes; i++) {
-		printf("%d\t%s\n",
-				info[i].pid),
-				info[i].command;
+		hours = info[i].time / 360000;
+		info[i].time -= hours * 360000;
+		minutes = info[i].time / 6000;
+		info[i].time -= minutes * 6000;
+		seconds = info[i].time / 100;
+
+		printf("%d\t%s\t%02llu:%02llu:%02llu\t%s\n",
+				info[i].pid,
+				info[i].tty,
+				hours,
+				minutes,
+				seconds,
+				info[i].command);
 	}
 	free(info);
 	return 0;
