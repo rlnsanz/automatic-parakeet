@@ -12,6 +12,6 @@ TODO: Write usage instructions
 
 ## Credits
 
-Daniel D'Souza
-Rolando Garcia
-James Hutchins
+Daniel D'Souza,
+Rolando Garcia,
+and James Hutchins
