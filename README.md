@@ -2,9 +2,10 @@
 
 TODO: Write a project description
 
-## Installation
+## Compilation
 
-TODO: Describe the installation process
+Because the user-program driver fake_ps.c includes math.h, compile as
+gcc fake_ps.c -o fake_ps.out -lm
 
 ## Usage
 
