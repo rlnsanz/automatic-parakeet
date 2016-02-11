@@ -2,7 +2,6 @@
  *	get_proc_custom.c
  *	author: Daniel D'Souza
  *
- *	this file should be placed along with get_proc_custom.h and its makefile in the <kerneldir>/cse340 folder.
  *	DISCLAIMER: The use of absolutes instead of the predef macros is bad.
  */
 #include <linux/syscalls.h>
@@ -12,14 +11,16 @@
 #include <linux/tty.h>
 #include <linux/string.h>
 #include <asm/uaccess.h>
-// #include <../cse430/get_proc_custom.h>
+
+#define TTY_LENGTH 32
+#define CMD_LENGTH 16
 
 struct CustomProcInfo {
 	int pid;
-	char tty[64];
+	char tty[TTY_LENGTH];
 	unsigned long long int time; //cputime_t is an unsigned 64bit integer.
 	//This should really be using the macro, but this is easier.
-	char command[16];
+	char command[CMD_LENGTH];
 };
 
 asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomProcInfo __user *proc_array ) {
@@ -62,17 +63,17 @@ asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomP
 		
 			printk(KERN_INFO "DEBUG: ORIG: %s : %d\n" , task->comm, sizeof(task->comm));
 			strncpy(info[i].command, task->comm, sizeof(task->comm)); //copy the the command name into the user array.
-			info[i].command[15] = '\0'; //adding the terminator may not be necessary, but is a good idea anyway.
+			info[i].command[CMD_LENGTH - 1] = '\0'; //adding the terminator may not be necessary, but is a good idea anyway.
 			printk(KERN_INFO "DEBUG: COPY: %s : %d\n" , info[i].command, sizeof(info[i].command));
 			
 			if (task->signal->tty == NULL || task->signal->tty->name == NULL) {
 				printk(KERN_INFO "DEBUG: TTY: ?\n");
-				strncpy(info[i].tty, null_string, sizeof(info[i].tty)); //copy the tty into the user array. BAD DANIEL, not using size macros...
+				strncpy(info[i].tty, null_string, sizeof(info[i].tty)); //copy the tty into the user array.
 			} else {
 				printk(KERN_INFO "DEBUG: TTY: %s\n", task->signal->tty->name);
-				strncpy(info[i].tty, task->signal->tty->name, sizeof(info[i].tty)); //copy the tty into the user array. BAD DANIEL, not using size macros...
+				strncpy(info[i].tty, task->signal->tty->name, sizeof(info[i].tty)); //copy the tty into the user array.
 			}
-			info[i].tty[63] = '\0';
+			info[i].tty[TTY_LENGTH - 1] = '\0';
 			printk(KERN_INFO "DEBUG: TTYout: %s\n", info[i].tty);
 
 			i++;	
