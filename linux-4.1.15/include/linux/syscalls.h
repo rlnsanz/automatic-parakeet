@@ -68,6 +68,7 @@ struct sigaltstack;
 union bpf_attr;
 
 //custom struct to transfer process information.
+//created for project 2.1 by Daniel D'Souza
 struct CustomProcInfo;
 
 #include <linux/types.h>
