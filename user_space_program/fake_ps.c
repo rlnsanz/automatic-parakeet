@@ -9,7 +9,8 @@
 #include <string.h>
 #include <math.h>
 
-#define __NR_get_proc_custom 360
+// I needed to change this because this is 361 in my kernel -- James
+#define __NR_get_proc_custom 361
 #define TTY_LENGTH 32
 #define CMD_LENGTH 16
 
@@ -34,12 +35,12 @@ int main() {
 		printf("Could not count processes.\n");
 		return -1;
 	} else {
-		printf("Counted %d processes.\n", number_of_processes);
+		//printf("Counted %d processes.\n", number_of_processes);
 	}
 
 	//Allocate memory for the information. Fill array.
 	info = (struct CustomProcInfo *) malloc(number_of_processes * sizeof(struct CustomProcInfo));
-	printf("total size=%d \n", number_of_processes * sizeof(struct CustomProcInfo));
+	//printf("total size=%d \n", number_of_processes * sizeof(struct CustomProcInfo));
 	if (syscall(__NR_get_proc_custom, &number_of_processes, info)) {
 		printf("The syscall returned an error.\n");
 		return -1;
@@ -47,10 +48,10 @@ int main() {
 
 	// Determine an upper bound on the number of digits for PID allignment
 	const int pid_digits = ((int) floor(log10((double) info[number_of_processes - 1].pid))) + 1;
-	const int tty_len = strlen(info[number_of_processes - 1].tty) + 1;	
+	const int tty_len = strlen(info[number_of_processes - 1].tty) + 5;	
 	//Iterate through array, and print out values.
-	printf(" %*s ", pid_digits, "PID");
-	printf("TTY           TIME CMD\n");
+	printf(" %*s ", pid_digits, " PID");
+	printf("TTY          TIME CMD\n");
 	for(i = 0; i < number_of_processes; i++) {
 		hours = info[i].time / 360000;
 		info[i].time -= hours * 360000;
@@ -62,8 +63,8 @@ int main() {
 				pid_digits,
 				info[i].pid
 				);
-		printf("%-*s", tty_len, info[i].tty);
-		printf("\t%02llu:%02llu:%02llu %s\n",
+		printf("%-*s", tty_len ,info[i].tty);
+		printf("%02llu:%02llu:%02llu %s\n",
 				hours,
 				minutes,
 				seconds,
