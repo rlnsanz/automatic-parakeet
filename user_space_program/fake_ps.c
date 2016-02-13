@@ -10,7 +10,7 @@
 #include <math.h>
 
 // I needed to change this because this is 361 in my kernel -- James
-#define __NR_get_proc_custom 361
+#define __NR_get_proc_custom 360
 #define TTY_LENGTH 32
 #define CMD_LENGTH 16
 

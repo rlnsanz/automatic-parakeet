@@ -30,6 +30,7 @@ asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomP
 	struct task_struct *task;
 	struct CustomProcInfo *info;
 	char null_string[] = "?";
+	cputime_t utime, stime;
 
 	printk(KERN_INFO "DEBUG: Starting test.\n");
 	
@@ -52,19 +53,22 @@ asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomP
 		}
 
 		//create an array, and fill it.
-		printk(KERN_INFO "DEBUG: size is %d \n", last_pid);
+		//printk(KERN_INFO "DEBUG: size is %d \n", last_pid);
 		info = kmalloc(last_pid * sizeof(struct CustomProcInfo), GFP_KERNEL);
 		for_each_process(task) {
-			printk(KERN_INFO "DEBUG: ID is %d, i=%d \n", task->pid, i);
+			//printk(KERN_INFO "DEBUG: ID is %d, i=%d \n", task->pid, i);
 			info[i].pid = task->pid; //assign the pid as int into the user array.
 
-			printk(KERN_INFO "DEBUG: TIME is %llu \n", task->utime + task->stime);
-			info[i].time = task->utime + task->stime; //assign the time as u64 into the user array.
+			//printk(KERN_INFO "DEBUG: TIME is %llu \n", task->utime + task->stime);
+			utime = 0;
+			stime = 0;
+			thread_group_cputime_adjusted(task, &utime, &stime);
+			info[i].time = utime + stime; //assign the time as u64 into the user array.
 		
-			printk(KERN_INFO "DEBUG: ORIG: %s : %d\n" , task->comm, sizeof(task->comm));
+			//printk(KERN_INFO "DEBUG: ORIG: %s : %d\n" , task->comm, sizeof(task->comm));
 			strncpy(info[i].command, task->comm, sizeof(task->comm)); //copy the the command name into the user array.
 			info[i].command[CMD_LENGTH - 1] = '\0'; //adding the terminator may not be necessary, but is a good idea anyway.
-			printk(KERN_INFO "DEBUG: COPY: %s : %d\n" , info[i].command, sizeof(info[i].command));
+			//printk(KERN_INFO "DEBUG: COPY: %s : %d\n" , info[i].command, sizeof(info[i].command));
 			
 			if (task->signal->tty == NULL || task->signal->tty->name == NULL) {
 				printk(KERN_INFO "DEBUG: TTY: ?\n");
@@ -74,13 +78,13 @@ asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomP
 				strncpy(info[i].tty, task->signal->tty->name, sizeof(info[i].tty)); //copy the tty into the user array.
 			}
 			info[i].tty[TTY_LENGTH - 1] = '\0';
-			printk(KERN_INFO "DEBUG: TTYout: %s\n", info[i].tty);
+			//printk(KERN_INFO "DEBUG: TTYout: %s\n", info[i].tty);
 
 			i++;	
 		}
 
 		//use to check the total size. Remove when finished.
-		printk("DEBUG: total size= %d \n", last_pid * sizeof(struct CustomProcInfo));
+		//printk("DEBUG: total size= %d \n", last_pid * sizeof(struct CustomProcInfo));
 
 		//copy the populated user array to the user
 		if (copy_to_user(proc_array, info, last_pid * sizeof(struct CustomProcInfo))) {
