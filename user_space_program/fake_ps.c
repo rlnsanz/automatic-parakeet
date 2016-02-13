@@ -1,6 +1,7 @@
 /*
  *	This program will test the my_syscall syscall
  *	Author: Daniel D'Souza (with help of course)
+ *	Editor: Rolando Garcia
  */
 
 #include <linux/unistd.h>
