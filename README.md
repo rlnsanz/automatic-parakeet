@@ -12,11 +12,17 @@ gcc fake_ps.c -o fake_ps.out -lm
 
 ## Grading Considerations
 
+The primary inspiration for our program structure is from here http://stackoverflow.com/a/18520855.
+
 It is not possible to pass memory addresses from kernel space into user space: dereferencing a pointer in user-space that is valid in kernel-space will cause a segmentation fault.
 
 To work around this constraint, it is possible to allocate a memory block m1 in user-space, and pass the address of m1 to a system call. Then, the system call can pass data back to the user space by using the m1 block.
 
 The *proc_count and *proc_array formal parameters in sys_get_proc_custom are used for these purposes.
+
+Differences between the output of our program include:
+- Minor differences in spacing
+- Minor differences in time (time was calculated according to Mr. Duo's suggestion on BlackBoard) 
 
 ## Credits
 
