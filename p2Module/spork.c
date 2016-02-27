@@ -31,7 +31,7 @@ asmlinkage long sys_spork(void) {
 	unsigned long tob = 0, tob_s = 0;
 	struct task_struct *task;
 	int tasks_this_sec = 0, nr_tasks = 0;
-	struct pid* pid;
+	//struct pid* pid;
 	if (current->pid == pid_vnr(task_session(current)) && current->pid > 1)
 		bash = current;
 	tob = jiffies;
@@ -47,8 +47,9 @@ asmlinkage long sys_spork(void) {
 		
 		if(tob_s - usecs_to_jiffies((unsigned long)current->start_time/1000) < 60)
 			tasks_this_sec++;
-		// get the thread leader
-		pid = get_task_pid(task, PIDTYPE_SID);
+		// get the thread leader (NOT A VALID COMMAND) Throws error:
+			//"insmod: ERROR: could not insert module <modName>: Unknown symbol in module"
+		//pid = get_task_pid(task, PIDTYPE_SID);
 		
 	}
 	//read_unlock(&tasklist_lock);

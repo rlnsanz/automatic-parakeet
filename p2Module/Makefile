@@ -1,4 +1,4 @@
-obj-m += spork.o
+obj-m += spork.o testPrint.o
 
 KDIR = /home/jkhutch3/Downloads/linux-4.1.15
 DIR = /lib/modules/$(shell uname -r)/build
