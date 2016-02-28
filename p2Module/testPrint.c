@@ -13,46 +13,47 @@
 #include <generated/uapi/asm/unistd_32.h>
 // Might not need
 #define __NR_get_proc_custom 361
+#define MAX_NUM_OF_PROG 350	// NEED TO DETERMINE (500 is my guess)
+#define MAX_NUM_NEW_PRO 5	// NEED TO DETERMINE (5 is my guess)
 
-static int print(void){
+
+int wait_jiffies_from_start(int jif1, int time_to_wait){
+	int jif2 = jiffies;
+	while(jif2-jif1 < time_to_wait) jif2 = jiffies;
+	return jif2;
+}
+
+int print(void){
 	// Varriable decleration
 	struct task_struct *task;
-	int nr_tasks = 0;
-	/*
-	  unsigned long tob = 0;
-	  u64 tob2 = 0, diff_jiff = 0;
-	  int tasks_this_min = 0;
-	  struct pid* pid;
-	*/
+	int nr_tasks1 = 0, nr_tasks2 = 0, nr_tasks3 = 0;
+	unsigned long jif1 = 0, jif2 = 0;
 	
-	// Gets current jiffies (This seems to work, but the task ones do not)
-	// These jiffies go up by a couple thousand everytime I run the program.
-	/*
-	  tob = jiffies;
-	  tob2 = get_jiffies_64();
-	  printk("%lu\n",tob);
-	  printk("%llu\n",tob2);
-	*/
+	// Start jiffies
+	jif1 = jiffies;
+	// Iterates through each task and counts them
+	for_each_process(task) nr_tasks1++;
 
-	// Iterates through each task
-	for_each_process(task) {
-		// Counts number of tasks
-		nr_tasks++;
-		
-		// A sample (not all) of things I attempted to get a reliable outpur from task
-		/*
-		  diff_jiff = tob - task->start_time;
-		  diff_jiff = tob2 - task->start_time;
-		  printk("%llu\n",task->real_start_time-task->start_time);
-		  printk("%llu\n",task->start_time);// Larger and smaller than both jiffies
-		  printk("Current time = %llu\n",current->start_time);// Never changes
-		  printk("Task time (j) %lu\n",usecs_to_jiffies(task->start_time));
-		  printk("%llu = %llu seconds\n", diff_jiff, diff_jiff/HZ);
-		*/
-
-		// Prints pid of the tasks
-		printk("Task name is %s\nPid is %d\n", task->comm, task->pid);
+	// Waits HZ jiffies (should be 1 second)
+	jif2 = wait_jiffies_from_start(jif1,HZ);
+	
+	// Iterates through each task and counts them (more tasks than last time?)
+	for_each_process(task) nr_tasks2++;
+	
+	// If either of the arbitrary maxes are met (print and kill the new tasks)
+	if(nr_tasks2 > MAX_NUM_OF_PROG || nr_tasks2-nr_tasks1 > MAX_NUM_NEW_PRO){
+		for_each_process(task){
+			if(++nr_tasks3 > nr_tasks1){
+			// Currently kills all tasks that were created since program start
+				printk("Task name is %s\n", task->comm);
+				send_sig_info(SIGKILL, SEND_SIG_FORCED, task);
+			}
+		}
 	}
+	//printk("Task name is %s\nPid is %d\n", task->comm, task->pid);
+	//printk("There are %d tasks\n",nr_tasks1);
+	//printk("There are %d tasks\n", nr_tasks2);
+	//printk("There have been %lu jiffies.\n", jif2-jif1);
 	
 	return 0;
 }
