@@ -10,17 +10,30 @@
 #include <linux/kthread.h>
 #include <linux/sched.h>
 
-struct task_struct *monitor_task;
+#include <linux/semaphore.h>
 
-int monitor_function(void data) {
+struct task_struct *monitor_task;
+int monitor_function(void *data);
+int kill_forks(void);
+
+int monitor_function(void *data) {
+    printk(KERN_INFO "IN THREAD FUNCTION");
+    while(!kthread_should_stop()) {
+        schedule();
+
+    }
+    return 0;
+}
+
+int kill_forks(void) {
 
     return 0;
 }
 
-int kill_forks(
-
 // Get the party started
 int init_module(void) {
+    int data;
+    data = 20;
     printk(KERN_INFO "Loading SPORK");
     monitor_task = kthread_create(&monitor_function, (void *)data, "fork_watchdog");
     printk(KERN_INFO "Monitoring Task: %s",monitor_task->comm);
