@@ -1,5 +1,6 @@
 /*
 *	Safe Process Fork
+*	spork.c
 */
 
 #include <linux/module.h>
@@ -18,16 +19,15 @@
 
 #define fork_rate_cap 100
 #define fork_abs_cap 16000
-
-extern void *sys_call_table[];
+//extern void *sys_call_table[];
 
 static struct task_struct *bash; 
-
+static int loop_enabled = 1;
 /* The system calls to be modified: */
-int (*orig_sys_fork)  (void);
+//int (*orig_sys_fork)  (void);
 
 
-asmlinkage long sys_spork(void) {
+int sys_spork(void) {
 	unsigned long tob = 0;
 	struct task_struct *task;
 	int tasks_this_sec = 0, nr_tasks = 0;
@@ -59,20 +59,22 @@ asmlinkage long sys_spork(void) {
 		read_unlock(&tasklist_lock);
 	}
 	
-	return (orig_sys_fork());
+	return 0;
 }
 
 int init_module()
 {
-	//orig_sys_fork  = sys_call_table[__NR_fork];
-	SYSCALL_DEFINE2(sys_spork, long);
 	printk(KERN_INFO "Spork loaded\n");
+	while (loop_enabled){
+		sys_spork();
+	}
 	return(0);
 }
 
 
 void cleanup_module()
 {
-	sys_call_table[__NR_fork]  = orig_sys_fork; 
+	loop_enabled = 0;
+	printk(KERN_INFO, "Spork unloaded\n");
 }
 
