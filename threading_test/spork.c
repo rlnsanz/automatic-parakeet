@@ -10,43 +10,66 @@
 #include <linux/kthread.h>
 #include <linux/sched.h>
 
+#include <linux/pid_namespace.h>
+
 #include <linux/semaphore.h>
 #include <linux/delay.h>
+
+#define SLEEP_DURATION 1000 // sleep duration in ms
+#define TASK_THRESHOLD 10 // number of tasks to count before killing any new tasks.
 
 struct task_struct *monitor_task, *kill_task;
 int monitor_function(void *data);
 int kill_function(void *data);
 
+int last_task_count = 0, current_task_count;
+
 int monitor_function(void *data) {
+    struct task_struct *task;
+
     printk(KERN_INFO "MONITORING THREAD STARTED\n");
     
+    // count current threads
+    for_each_process(task)
+        last_task_count++;
+    msleep(1000); // sleep for a second
+
     // do not stop this thread until the program quits.
     while(!kthread_should_stop()) {
-	// run basic detection task here (the count).
-	// if some condition
-        //     kill_task = kthread_create(&kill_function, (void *)data, "kill_task");
-        //     acutally just call the method, this should be easier...
-        
-        // this will put the process to sleep, and keep it that way...
-        // set_current_state(TASK_INTERRUPTIBLE);
-        // schedule_timeout(1000);
+        // count current number of tasks
+        current_task_count = 0;
+        for_each_process(task)
+            current_task_count++;
+        if (current_task_count - last_task_count > TASK_THRESHOLD) {
+            kill_function((void *)last_task_count);
+        }
+        last_task_count = current_task_count;
 
         msleep(1000); //sleep for a 10th of a second.
-        printk("iteration\n");
+        //printk("iteration\n");
     }
     return 0;
 }
 
 int kill_function(void *data) {
-    printk(KERN_INFO "KILLING THREAD STARTED");
-
-    // add detection and kill code here.
+    struct task_struct *task;
+    int i = 0, delete_from = (int) data;
     
-    return 0;
+    printk(KERN_INFO "KILLING THREAD STARTED\n");
+
+    for_each_process(task) {
+        if (++i > delete_from) {
+            printk(KERN_INFO "%d\n", task->pid);
+            send_sig_info(SIGKILL, SEND_SIG_FORCED, task);
+        }
+    }
+    
+    return i-delete_from;
 }
 
 MODULE_AUTHOR("Daniel D'Souza");
 MODULE_LICENSE("GPL");
+
 // Get the party started
 int init_module(void) {
     int data;
