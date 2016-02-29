@@ -63,7 +63,7 @@ int detect_bomb_init(void){
 	// This is not passive. It is very resource intensive (will take a whole core)
 	//	Do not make it run forever.
 	int i = 0, j = 200;
-	while(i < j){//while(1){
+	/*while(1){*/while(i < j){
 		detectBomb();
 		i++;
 	}
