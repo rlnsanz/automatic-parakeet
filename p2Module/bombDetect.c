@@ -4,7 +4,7 @@
 #include <linux/pid_namespace.h>
 
 // MACROS (arbitrary numbers)
-#define MAX_NUM_NEW_PRO 5	// NEED TO DETERMINE (5 is my guess)
+#define MAX_NUM_NEW_PRO 10	// NEED TO DETERMINE (5 is my guess)
 
 /**
  * returns new jiffies value
@@ -60,8 +60,10 @@ int detectBomb(void){
 
 int detect_bomb_init(void){
 	// Remove the i < j and just make it 1 to run forever
+	// This is not passive. It is very resource intensive (will take a whole core)
+	//	Do not make it run forever.
 	int i = 0, j = 200;
-	while(i < j){
+	while(i < j){//while(1){
 		detectBomb();
 		i++;
 	}
