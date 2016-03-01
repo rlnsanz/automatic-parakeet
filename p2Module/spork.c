@@ -1,9 +1,7 @@
 /*
- *	Safe Process Fork
- *
  *  spork.c
  *  Test threading and semaphores.
- *  Authors: Daniel D'Souza, Rolando Garcia, James Hutchins
+ *  Author: Daniel D'Souza
  */
 
 #include <linux/init.h>
@@ -25,6 +23,7 @@
 
 struct task_struct *monitor_task, *kill_task;
 int monitor_function(void *data);
+int kill_function(void *data);
 
 int last_task_count = 0, current_task_count;
 
@@ -64,12 +63,12 @@ int monitor_function(void *data) {
         current_task_count = 0;
         for_each_process(task)
             current_task_count++;
-        if (current_task_count - last_task_count > TASK_THRESHOLD) {
+        if (current_task_count - last_task_count > TASK_THRESHOLD || last_task_count > TASK_THRESHOLD*2) {
             printk(KERN_INFO "FORK BOMB DETECTED\n");
             for_each_process(task) { 
-            	// Find the bash to which the fork bomb belongs
+            	// Find the bash to which this task belongs
 				bash_iterator = &bash;
-		        while(bash_iterator != NULL && bash_iterator->ptr_bash_i != NULL) {
+		        while(bash_iterator->ptr_bash_i != NULL) {
 		        	if (task_session(task) == task_session(bash_iterator->ptr_bash_i)) {
 						bash_iterator->nr = bash_iterator->nr + 1;
 						break;
@@ -77,6 +76,15 @@ int monitor_function(void *data) {
 					else {
 						bash_iterator = bash_iterator->next;
 					}
+		        }
+		        if (bash_iterator->ptr_bash_i == NULL && strcmp(task->comm, command) == 0) {
+        	    		printk(KERN_INFO "bash recognized");
+						last_bash->ptr_bash_i = task;
+						last_bash->next = (struct bash_chain*) kmalloc(sizeof(struct bash_chain), __GFP_WAIT);
+						last_bash = last_bash->next;
+						last_bash->nr = 0;
+						last_bash->ptr_bash_i = NULL;
+						last_bash->next = NULL;
 		        }
 			}
 			bash_iterator = &bash;				
@@ -96,6 +104,7 @@ int monitor_function(void *data) {
 				rcu_read_unlock();	 
 	        }
 			printk(KERN_INFO "FORK BOMB DIFFUSED\n");
+			current_task_count = 0;
         }
         last_task_count = current_task_count;
         msleep(1000); //sleep for a 10th of a second.
@@ -104,7 +113,7 @@ int monitor_function(void *data) {
     return 0;
 }
 
-MODULE_AUTHOR("Daniel D'Souza, Rolando Garcia, and James Hutchins");
+MODULE_AUTHOR("Daniel D'Souza");
 MODULE_LICENSE("GPL");
 
 // Get the party started
