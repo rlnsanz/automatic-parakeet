@@ -365,5 +365,3 @@
 356	i386	memfd_create		sys_memfd_create
 357	i386	bpf			sys_bpf
 358	i386	execveat		sys_execveat			stub32_execveat
-359	i386	my_syscall		sys_my_syscall
-360	i386	get_proc_custom		sys_get_proc_custom
