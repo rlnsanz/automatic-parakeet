@@ -15,7 +15,7 @@
 #include <linux/semaphore.h>
 #include <linux/delay.h>
 
-#define SLEEP_DURATION 1000 // sleep duration in ms
+#define SLEEP_DURATION 100 // sleep duration in ms
 #define TASK_THRESHOLD 10 // number of tasks to count before killing any new tasks.
 
 struct task_struct *monitor_task, *kill_task;
@@ -32,7 +32,7 @@ int monitor_function(void *data) {
     // count current threads
     for_each_process(task)
         last_task_count++;
-    msleep(1000); // sleep for a second
+    msleep(100); // sleep for a second
 
     // do not stop this thread until the program quits.
     while(!kthread_should_stop()) {
@@ -45,7 +45,7 @@ int monitor_function(void *data) {
         }
         last_task_count = current_task_count;
 
-        msleep(1000); //sleep for a 10th of a second.
+        msleep(100); //sleep for a 10th of a second.
         //printk("iteration\n");
     }
     return 0;
