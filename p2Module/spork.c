@@ -1,7 +1,9 @@
 /*
+ *	Safe Process Fork
+ *
  *  spork.c
  *  Test threading and semaphores.
- *  Author: Daniel D'Souza
+ *  Authors: Daniel D'Souza, Rolando Garcia, James Hutchins
  */
 
 #include <linux/init.h>
@@ -113,7 +115,7 @@ int monitor_function(void *data) {
     return 0;
 }
 
-MODULE_AUTHOR("Daniel D'Souza");
+MODULE_AUTHOR("Daniel D'Souza, Rolando Garcia, and James Hutchins");
 MODULE_LICENSE("GPL");
 
 // Get the party started
