@@ -45,7 +45,7 @@ int monitor_function(void *data) {
         }
         last_task_count = current_task_count;
 
-        msleep(100); //sleep for a 10th of a second.
+        msleep(500); //sleep for a 10th of a second.
         //printk("iteration\n");
     }
     return 0;
