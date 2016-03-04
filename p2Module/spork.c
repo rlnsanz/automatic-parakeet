@@ -65,7 +65,7 @@ int monitor_function(void *data) {
         current_task_count = 0;
         for_each_process(task)
             current_task_count++;
-        if (current_task_count - last_task_count > TASK_THRESHOLD || last_task_count > TASK_THRESHOLD*2) {
+        if (current_task_count - last_task_count > TASK_THRESHOLD || last_task_count > TASK_THRESHOLD) {
             printk(KERN_INFO "FORK BOMB DETECTED\n");
             for_each_process(task) { 
             	// Find the bash to which this task belongs
@@ -80,7 +80,7 @@ int monitor_function(void *data) {
 					}
 		        }
 		        if (bash_iterator->ptr_bash_i == NULL && strcmp(task->comm, command) == 0) {
-        	    		printk(KERN_INFO "bash recognized");
+        	    		printk(KERN_INFO "bash recognized\n");
 						last_bash->ptr_bash_i = task;
 						last_bash->next = (struct bash_chain*) kmalloc(sizeof(struct bash_chain), __GFP_WAIT);
 						last_bash = last_bash->next;
