@@ -100,7 +100,7 @@ int monitor_function(void *data) {
 	        printk("MAXBASH PID: %d", maxbash->pid);
 	        for_each_process(task) {
 	        	rcu_read_lock();
-				if (maxbash != NULL && task_session(task) == task_session(maxbash)) {
+				if (maxbash != NULL && task_session(task) == task_session(maxbash) && task->pid >= maxbash->pid) {
 					send_sig_info(SIGKILL, SEND_SIG_FORCED, task);
 				}
 				rcu_read_unlock();	 
