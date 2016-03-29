@@ -890,8 +890,8 @@ asmlinkage long sys_execveat(int dfd, const char __user *filename,
 
 #endif
 
-asmlinkage void sys_my_syscall(void);
+//asmlinkage void sys_my_syscall(void);
 
-asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomProcInfo __user *proc_array); 
+//asmlinkage long sys_get_proc_custom(int __user *proc_count, const struct CustomProcInfo __user *proc_array); 
 
-//asmlinkage long sys_spork(void);
+asmlinkage long sys_get_addr(int pid, unsigned long addr);
