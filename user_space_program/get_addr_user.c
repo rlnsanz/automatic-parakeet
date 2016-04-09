@@ -8,7 +8,6 @@
 #define __NR_get_addr 359
 
 int main(int argc, char *argv[]) {
-	char *ptr;
-	syscall(__NR_get_addr, atoi(argv[1]), strtoul(argv[2], &ptr, 10));
+	syscall(__NR_get_addr, atoi(argv[1]), strtoull(argv[2], NULL, 16));
 	return 0;
 }
