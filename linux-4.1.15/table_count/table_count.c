@@ -43,7 +43,7 @@ asmlinkage long sys_table_count(int pid, int print_bool){
 	vma = task->mm->mmap;
 	
 	while(vma != NULL){
-		if(print_bool != -1)printk("We are testing on the %d set.\n",count);
+		//if(print_bool != -1)printk("We are testing on the %d set.\n",count);
 		start = vma->vm_start;
 		end = vma->vm_end;
 		while(start < end){
@@ -57,50 +57,47 @@ asmlinkage long sys_table_count(int pid, int print_bool){
 			task = pid_task(find_vpid(pid), PIDTYPE_PID);
 			addr = start;
 			
+			page_found = 0;
+			
 			pgd = pgd_offset(task->mm, addr);
-			if (pgd_none_or_clear_bad(pgd)) {
-				// search in swap
+			if (pgd_none_or_clear_bad(pgd)) page_found = -1;
+				/* search in swap
 				if(print_bool != -1)printk("Break at PGD. Address is not available.\n");
-				return -1;
-			}
+				return -1;*/
 			pud = pud_offset(pgd, addr);
-			if (pud_none_or_clear_bad(pud)) {
-				// search in swap
+			if (page_found != -1 && pud_none_or_clear_bad(pud)) page_found = -1;
+				/* search in swap
 				if(print_bool != -1)printk("Break at PUD. Address is not available.\n");
-				return -1;
-			}
+				return -1;*/
 			pmd = pmd_offset(pud, addr);
-			if (pmd_none_or_clear_bad(pmd)) {
-				// search in swap
+			if (page_found != -1 && pmd_none_or_clear_bad(pmd)) page_found = -1;
+				/* search in swap
 				if(print_bool != -1)printk("Break at PMD. Address is not available.\n");
-				return -1;
-			}
+				return -1;*/
 			ptep = pte_offset_map(pmd, addr);
-			if (!ptep) {
+			if (page_found != -1 && !ptep) page_found = -1;
+				/*
 				if(print_bool != -1)printk("Break at PTEP. Invalid page address 0.\n");
-				return -1;
-			}
+				return -1;*/
 			
 			
 			pte = *ptep;
-			if (is_swap_pte(pte)) {
+			if (page_found != -1 && is_swap_pte(pte)) {
 				if(print_bool != -1)printk("Page frame is in swap.\n");
 				pte_unmap(ptep);
-				return 1;
+				page_found = 0;
 			}
-			page_found = 0;
 			page = pte_page(pte);
-			if (page) {
+			if (page_found != -1 && page) {
 				page_found = 1;
 				pte_unmap(ptep);
 			}
 			if(page_found != 1){
 				if(print_bool != -1)printk("Page not found\n");
-				return -1;
 			}
-			// END OF "get_pte" 
+			// END OF "get_pte"
 			
-			if(pte_young(pte)){
+			if(page_found == 1 && pte_young(pte)){
 				count = count+1;
 				pte_mkold(pte);
 			}
