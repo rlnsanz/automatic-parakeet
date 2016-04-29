@@ -32,19 +32,20 @@
 //#define __NR_table_count 360
 
 int monitor_function(void *data);
-int sys_table_count(int pid, int print_bool);
+unsigned int sys_table_count(struct task_struct *task, int print_bool);
 struct task_struct *monitor_task;
 
 int monitor_function(void *data) {
     struct task_struct *task;
-    int count, countKB;
+    unsigned int count, countKB;
     // do not stop this thread until the program quits.
     while(!kthread_should_stop()) {
         //syscall(__NR_table_count,(int) data ,1);
 	count = 0;
 	for_each_process(task){
-            count += sys_table_count(task->pid ,1);
-	    count -= 2;
+        count += sys_table_count(task, 1);
+        if (count >= 2)
+	    	count -= 2;
 	}
 	countKB = count*4;
 	printk("%d\n",countKB);
@@ -62,7 +63,7 @@ int init_module(void) {
     int data;
     data = 20;
     printk(KERN_INFO "Loading SPORK\n");
-    monitor_task = kthread_create(&monitor_function, (void *)data, "fork_watchdog");
+    monitor_task = kthread_create(&monitor_function, (void *) data, "fork_watchdog");
     printk(KERN_INFO "Created monitoring Task: %s\n",monitor_task->comm);
     if ((monitor_task)) {
         printk(KERN_INFO "Waking up process\n");
@@ -91,19 +92,17 @@ void cleanup_module(void) {
  * have been accessed recently, then it sets the "accessed" bit to 0.
 */
 
-int sys_table_count(int pid, int print_bool){
+unsigned int sys_table_count(struct task_struct *task, int print_bool) {
 	
 	//printk("This\nis\nthe\nsystem\noutput\n."); // This printed for me
-	int count;
+	unsigned int count;
 	int page_found;
-	unsigned long start;
-	unsigned long end;
-	unsigned long addr;
-	struct task_struct *task;
+	unsigned long long start;
+	unsigned long long end;
+	unsigned long long addr;
 	struct vm_area_struct *vma;
 	
 	count = 0;
-	task = pid_task(find_vpid(pid), PIDTYPE_PID);
 	vma = task->mm->mmap;
 	
 	while(vma != NULL){
@@ -116,9 +115,8 @@ int sys_table_count(int pid, int print_bool){
 			pmd_t *pmd;
 			pte_t *ptep, pte;
 			pud_t *pud;
-			struct task_struct *task;
+
 			struct page *page = NULL;
-			task = pid_task(find_vpid(pid), PIDTYPE_PID);
 			addr = start;
 			
 			page_found = 0;
@@ -147,7 +145,7 @@ int sys_table_count(int pid, int print_bool){
 			
 			pte = *ptep;
 			if (page_found != -1 && is_swap_pte(pte)) {
-				if(print_bool != -1)printk("Page frame is in swap.\n");
+				if(print_bool != -1) printk("Page frame is in swap.\n");
 				pte_unmap(ptep);
 				page_found = 0;
 			}
@@ -172,6 +170,6 @@ int sys_table_count(int pid, int print_bool){
 		vma = vma->vm_next;
 	}
 	
-	if(print_bool != -1)printk("%d: %d\n",pid,count);
+	if(print_bool != -1) printk("%d: %d\n", task->pid, count);
 	return count;
 }
