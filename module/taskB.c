@@ -32,25 +32,28 @@
 //#define __NR_table_count 360
 
 int monitor_function(void *data);
-int sys_table_count(int pid, int print_bool);
+int sys_table_count(struct task_struct *task, int print_bool);
 struct task_struct *monitor_task;
+static struct task_struct *task = NULL;
 
 int monitor_function(void *data) {
-    struct task_struct *task;
-    int count, countKB;
+    unsigned int count, countKB;
     // do not stop this thread until the program quits.
-    while(!kthread_should_stop()) {
+    printk("monitor_function ran. This log at line 42.\n");
+    //while(!kthread_should_stop()) {
         //syscall(__NR_table_count,(int) data ,1);
+    printk("Entered while loop. This log at line 45.\n");
 	count = 0;
 	for_each_process(task){
-            count += sys_table_count(task->pid ,1);
-	    count -= 2;
+        count += sys_table_count(task, 1);
+        if (count >= 2)
+	    	count -= 2;
+	    msleep(SLEEP_DURATION); //sleep for a 10th of a second.
 	}
 	countKB = count*4;
-	printk("%d\n",countKB);
-        msleep(SLEEP_DURATION); //sleep for a 10th of a second.
+	printk("TWSS: %d\n",countKB);
         //printk("iteration\n");
-    }
+    //}
     return 0;
 }
 
@@ -63,8 +66,14 @@ int init_module(void) {
     data = 20;
     printk(KERN_INFO "Loading SPORK\n");
     monitor_task = kthread_create(&monitor_function, (void *)data, "fork_watchdog");
-    printk(KERN_INFO "Created monitoring Task: %s\n",monitor_task->comm);
+    if (monitor_task == NULL) {
+    	printk("Attempted to dereference monitor_task line 68");
+    }
+    else {
+    	printk("valid monitor_task");
+    }
     if ((monitor_task)) {
+    	printk(KERN_INFO "Created monitoring Task: %s\n",monitor_task->comm);
         printk(KERN_INFO "Waking up process\n");
         wake_up_process(monitor_task);
     }
@@ -91,19 +100,27 @@ void cleanup_module(void) {
  * have been accessed recently, then it sets the "accessed" bit to 0.
 */
 
-int sys_table_count(int pid, int print_bool){
+int sys_table_count(struct task_struct *task, int print_bool) {
 	
 	//printk("This\nis\nthe\nsystem\noutput\n."); // This printed for me
-	int count;
+
+	unsigned int count;
 	int page_found;
-	unsigned long start;
-	unsigned long end;
-	unsigned long addr;
-	struct task_struct *task;
+	unsigned long long start;
+	unsigned long long end;
+	unsigned long long addr;
 	struct vm_area_struct *vma;
 	
+	printk("Entered sys_table_count. This log at line 106.\n");
+
+	if (task == NULL) {
+		return 0;
+	}
+
 	count = 0;
-	task = pid_task(find_vpid(pid), PIDTYPE_PID);
+	if (task->mm == NULL) {
+		return 0;
+	}
 	vma = task->mm->mmap;
 	
 	while(vma != NULL){
@@ -116,9 +133,7 @@ int sys_table_count(int pid, int print_bool){
 			pmd_t *pmd;
 			pte_t *ptep, pte;
 			pud_t *pud;
-			struct task_struct *task;
 			struct page *page = NULL;
-			task = pid_task(find_vpid(pid), PIDTYPE_PID);
 			addr = start;
 			
 			page_found = 0;
@@ -147,7 +162,7 @@ int sys_table_count(int pid, int print_bool){
 			
 			pte = *ptep;
 			if (page_found != -1 && is_swap_pte(pte)) {
-				if(print_bool != -1)printk("Page frame is in swap.\n");
+				if(print_bool != -1) printk("Page frame is in swap.\n");
 				pte_unmap(ptep);
 				page_found = 0;
 			}
@@ -157,7 +172,7 @@ int sys_table_count(int pid, int print_bool){
 				pte_unmap(ptep);
 			}
 			if(page_found != 1){
-				if(print_bool != -1)printk("Page not found\n");
+				if(print_bool != -1) printk("Page not found\n");
 			}
 			// END OF "get_pte"
 			
@@ -172,6 +187,6 @@ int sys_table_count(int pid, int print_bool){
 		vma = vma->vm_next;
 	}
 	
-	if(print_bool != -1)printk("%d: %d\n",pid,count);
+	if (print_bool != -1) printk("WSS: %d\n", count);
 	return count;
 }
